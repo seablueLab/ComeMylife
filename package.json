@@ -1,0 +1,23 @@
+{
+  "name": "comemylife",
+  "main": "index.html",
+  "nodejs": true,
+  "window":{
+        "id": "comemylife",
+        "title":"ComeMylife",
+        "toolbar":false,
+        "frame":true,
+        "position":"center",
+        "always-on-top":true,
+        "max_width": 800,
+        "max_height": 700,
+        "min_width": 380,
+        "min_height": 520,
+        "as_desktop": true,
+        "show": false,
+        "show_in_taskbar": true,
+        "icon": "./img/sea-green.png"
+    },
+    "version": "1.0",
+    "dependencies": {}
+}
