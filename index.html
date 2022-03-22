@@ -13,17 +13,19 @@
 	<link rel="stylesheet" href="./css/element-ui@2.15.6.css">
 <!-- Include stylesheet -->
 </head>
-<body class="Seablue">
+<body class="Seablue" oncontextmenu="return false">
   <div class="ComeMylife">
     <div class="ComeMylife-title">
         <h2 v-text="ComeMylifeTitle">标题</h2>
     </div>
-    <el-menu :default-active="1" style="user-select: none;" mode="horizontal">
+    <el-menu default-active='1' style="user-select: none;" mode="horizontal">
         <el-menu-item index="1" @click="onNavHome">首页</el-menu-item>
-        <el-submenu index="2">
-          <template slot="title">选项</template>
-          <el-menu-item index="2-1" @click="onNavArchive">创建归档</el-menu-item>
-          <el-menu-item index="2-2">未定义</el-menu-item>
+        <el-menu-item index="2" @click="onNavIsFolder">文件管理</el-menu-item>
+        <el-submenu index="3">
+          <template slot="title">文件选项</template>
+          <el-menu-item index="3-1" @click="onNavArchive">创建归档</el-menu-item>
+          <el-menu-item index="3-2" @click="onNavFolder">创建文件夹</el-menu-item>
+        </el-submenu>
     </el-menu>
     
     <el-dialog style="user-select: none;" title="创建归档"
@@ -62,10 +64,26 @@
             <div slot="tip" class="el-upload__tip" style="text-align: center;">保存程序快捷方式</div>
         </el-upload>
     </el-dialog>
-    <div class="ComeMylife-dropdown dropdown-archive">
+    <el-dialog style="user-select: none;" title="保存目录" :before-close="handleFolderClose" 
+    top='12vh' :visible.sync="isNavFolder" width="90%"> 
+        <el-upload id="Folder"
+            action="#"
+            ref="uploadFolder"
+            drag
+            formData
+            :on-success="handSuccessFolder"
+            >
+           <!-- webkitdirectory directory multiple formData -->
+            <i class="el-icon-upload"></i>
+            <div class="el-upload__text">将文件拖到此处获取目录，或<em>点击上传</em></div>
+            <div slot="tip" class="el-upload__tip" style="text-align: center;">打开文件获取目录</div>
+        </el-upload>
+        <!-- 最好再添加一个标准属性 directory ，防止某一天该属性被纳入w3c标准 -->
+    </el-dialog>
+    <div v-if="!isFolder" class="ComeMylife-dropdown dropdown-archive">
         <ol class="years">
             <li class="year" v-for="(item,i) in ComeMylifefile" :key="item.id">
-                <a class="expander" :ref="item.id" @click='onExpander(item.id)' href="#">
+                <a class="expander" :ref="item.id" @click='onExpander(item.id)' href="javascript:void(0);">
                     <span v-text='item.name'>归档</span>
                     <div style="display: inline-block;">
                         <i class="el-icon-edit" style="margin-left: 5px;" @click.stop='onCreateClassify(item,i)'></i>
@@ -75,7 +93,7 @@
                 </a>
                 <ol v-if="item.parent">
                     <li class="month" v-for="(items, j) in item.parent" :key="items.id">
-                        <a style="user-select: none;" class="expander" :ref="items.id" @click='onExpander(items.id)' href="#" v-text="items.name">
+                        <a style="user-select: none;" class="expander" :ref="items.id" @click='onExpander(items.id)' href="javascript:void(0);" v-text="items.name">
                             <span v-text="items.name">分类</span>
                         </a><div style="display: inline-block;user-select: none;">
                             <i class="el-icon-edit" style="margin-left: 5px;" @click.stop='onCreateData(items,i,j)'></i>
@@ -95,21 +113,17 @@
                 </ol>
             </li>
         </ol>
-        <ol v-if="false" class="years">
-            <li class="year" v-for="item in collection" :key="item.id">
-                <a class="expander" href="#" v-text='item.name'>归档</a>
-                <ol v-if="item.parent">
-                    <li class="month" v-for="items in item.parent" :key="items.id">
-                        <a class="expander" href="#" v-text="items.name">分类</a>
-                        <ol v-if="items.child">
-                            <li v-for="itmes in items.child" :key="itmes.id">
-                                <a target="_blank" :href="itmes.path" v-text="itmes.name">内容</a>
-                            </li>
-                        </ol>
-                    </li>
-                </ol>
+    </div>
+    <div v-if="isFolder" class="ComeMylife-folder">
+        <ul>
+            <li v-for="(item,i) in ComeMylifefolder" :key="item.id">
+                <a href="javascript:void(0);" @click="onFolderHref(item.name,item.path)" target="_blank" v-text="item.name"></a>
+                <div style="display: inline-block;user-select: none;">
+                    <i class="el-icon-news" style="margin-left: 5px;" @click.stop='onUpdateFolder(item,i)'></i>
+                    <i class="el-icon-delete" style="margin-left: 5px;" @click.stop='onDeleteFolder(item,i)'></i>
+                </div>
             </li>
-        </ol>
+        </ul>
     </div>
   </div>
 </body>

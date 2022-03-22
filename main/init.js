@@ -16,9 +16,25 @@ var tray = new gui.Tray({ title: 'seaNote - 笔记', icon: './img/sea-green.png'
 tray.tooltip = '点击显示/隐藏？ -seaNote';
 //添加一个菜单
 var menu = new gui.Menu();
+menu.append(new gui.MenuItem({ type: 'normal', label: '打开开发者模式', click: function(){
+    win.showDevTools();
+}}));
+menu.append(new gui.MenuItem({ type: 'normal', label: '重新加载', click: function(){
+    // 移除托盘图标
+    tray.remove();
+    tray = null;
+    win.reload();
+}}));
 menu.append(new gui.MenuItem({ type: 'normal', label: '退出', click: function(){
-    win.close(true);
-} }));
+    // 关闭时先进行隐藏以让用户觉得立即关闭
+    win.hide();
+    // 虽然关了,但实际上它还在工作
+    if (win != null){
+        win.close(true);
+    }
+    // 关闭新窗口也关闭主窗口
+    this.close(true);
+}}));
 tray.menu = menu;
 //click 托盘图标事件
 tray.on('click',
@@ -36,3 +52,11 @@ tray.on('click',
 win.on('close', function () {
     win.hide();
 });
+
+// 禁用右击
+document.onmousedown=disableclick;
+function disableclick(event) {
+    if(event.button==2) {
+        return false;
+    }
+}

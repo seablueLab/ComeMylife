@@ -1,3 +1,4 @@
+const { nextTick } = require("process");
 
 new Vue({
     el: ".ComeMylife",
@@ -6,6 +7,8 @@ new Vue({
             ComeMylifeTitle: '程序快捷方式管理程序',
             isNavArchive: false,
             isNavData: false,
+            isNavFolder: false,
+            isFolder: false,
             fileList: [],
             fileData: [],
             listI: null,
@@ -14,6 +17,7 @@ new Vue({
                 archive: '',
             },
             ComeMylifefile: [],
+            ComeMylifefolder: [],
             collection: [
                 {
                     "id": "61ff96ac699ba458306e9f05",
@@ -60,6 +64,9 @@ new Vue({
         },
         _collectionUrl() {
             return (this._dataUrl+'\\seaData\\collection.txt').replace(/\\/g, '\\\\');
+        },
+        _folderUrl() {
+            return (this._dataUrl+'\\seaData\\folder.txt').replace(/\\/g, '\\\\');
         },
     },
     methods: {
@@ -142,7 +149,7 @@ new Vue({
             this.listJ = j;
         },
         handleClose(done) {
-            this.uploadcClear();
+            this.uploadClear();
             this.listI = null;
             this.listJ = null;
             done();
@@ -316,7 +323,7 @@ new Vue({
                 });       
             });
         },
-        //
+        // 跳转文件
         onHref(type,suffix,path) {
             console.log(type,path);
             if(suffix === 'exe'){
@@ -324,6 +331,10 @@ new Vue({
             }else {
                 window.open(path);  
             }
+        },
+        // 跳转文件夹
+        onFolderHref(name,path) {
+            this._OpenFolder(path);
         },
         onExpander(id){
             // 点击打开分类
@@ -339,9 +350,85 @@ new Vue({
      */
         onNavHome() {
             this._init();
+            this.isFolder = false;
         },
         onNavArchive() {
             this.isNavArchive = true;
+        },
+        onNavIsFolder() {
+            this.isFolder = true;
+        },
+        onNavFolder() {
+            this.isNavFolder = true;
+            /* this.$nextTick(()=>{
+                $('#Folder .el-upload__input')[0].webkitdirectory = true;
+            }); */
+        },
+    /**
+        * 上传目录
+    */
+        handSuccessFolder(e,f,l) {
+            const id = parseInt(moment().format('YYYYMMDDhmmss'));
+            let arr = {
+                id: id,
+                name: f.raw.name,
+                path: f.raw.path.substring(0,(f.raw.path.lastIndexOf("\\"))+1),
+            };
+            this.ComeMylifefolder.push(arr);
+            this._addData(this._fs,this._folderUrl,JSON.stringify(this.ComeMylifefolder),()=>{
+                console.log(f,l);
+                this._init();
+            });
+        },
+        handleFolderClose(done) {
+            this.uploadFoldeClear();
+            done();
+        },
+        onUpdateFolder(item,i) {
+            this.$prompt('请输入新的目录名称', '修改', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+            }).then(({ value }) => {
+                value = value != null ? value : '';
+                if(value != ''){
+                    this.ComeMylifefolder[i].name = value;
+                    this._addData(this._fs,this._folderUrl,JSON.stringify(this.ComeMylifefolder),()=>{
+                        this._init();
+                    });
+                }else {
+                    this.$message({
+                        type: 'error',
+                        message: '目录名不能为空'
+                    });       
+                }
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '取消修改目录名'
+                });       
+            });
+        },
+        onDeleteFolder(item,i) {
+          const h = this.$createElement;
+          this.$confirm(h('p', null, [
+            h('span', null, [
+              h('span', null, '此操作将删除 '),
+              h('b', { style: 'color: #CC0000' }, item.name),
+              h('span', null, ' 是否继续?'),
+            ]),
+          ]), '删除', {
+            confirmButtonText: '删除',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            let sub = this.ComeMylifefolder.indexOf(item);
+            this.ComeMylifefolder.splice(sub,1);
+            this._addData(this._fs,this._folderUrl,JSON.stringify(this.ComeMylifefolder),()=>{
+                this._init();
+            });
+          }).catch(() => {
+            console.log('取消删除');
+          });
         },
     /**
         * 上传操作
@@ -356,7 +443,7 @@ new Vue({
                     }
                     this.ComeMylifefile.push(arr);
                     console.log(this.ComeMylifefile);
-                    this.uploadcClear();
+                    this.uploadClear();
                 });
             }
         },
@@ -389,8 +476,11 @@ new Vue({
         beforeRemove(file, fileList) {
           /* return this.$confirm(`确定移除 ${ file.name }？`); */
         },
-        uploadcClear() {
+        uploadClear() {
             return this.$refs.upload.clearFiles();
+        },
+        uploadFoldeClear() {
+            return this.$refs.uploadFolder.clearFiles();
         },
     /**
         * NODE CRUD
@@ -411,6 +501,11 @@ new Vue({
                 data = JSON.parse(data);
                 this.ComeMylifefile = data;
                 console.log(this.ComeMylifefile);
+            });
+            this._getData(this._fs,this._folderUrl,(data)=>{
+                data = JSON.parse(data);
+                this.ComeMylifefolder = data;
+                console.log(this.ComeMylifefolder);
             });
         },
         _addData(fs,dataUrl,data,callback) {
@@ -452,16 +547,14 @@ new Vue({
             });
         },
         _OpenEXE(dataUrl) {
-            // 打开应用程序
-            const exec = require('child_process').execFile;
             const qqLib = 'D:\\\\Tools\\\\install\\\\Tencent\\\\QQ\\\\Bin\\\\QQ.exe';
             dataUrl = dataUrl || qqLib
-            exec(dataUrl, function (err, data) {
-                if (err) {
-                    throw err;
-                }
-                console.log(data.toString());
-            });            
+            var exec = require('child_process').exec;
+            exec('explorer.exe /select,'+dataUrl); 
+        },
+        _OpenFolder(dataUrl) {
+            dataUrl = dataUrl || "D:\\\\Tools\\\\"
+            require('child_process').exec('start "" '+dataUrl+'');
         },
 
     },
