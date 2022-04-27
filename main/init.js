@@ -51,6 +51,7 @@ tray.on('click',
 );
 win.on('close', function () {
     win.hide();
+    isShowWindow = false;
 });
 
 // 禁用右击
