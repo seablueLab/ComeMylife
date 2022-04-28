@@ -12,8 +12,8 @@ setTimeout(()=>{
 var isShowWindow = true;
 var gui = require('nw.gui');
 var win = gui.Window.get();
-var tray = new gui.Tray({ title: 'seaNote - 笔记', icon: './img/sea-green.png' });
-tray.tooltip = '点击显示/隐藏？ -seaNote';
+var tray = new gui.Tray({ title: 'ComeMylife - 走向你', icon: './img/sea-green.png' });
+tray.tooltip = '点击显示/隐藏？ - ComeMylife';
 //添加一个菜单
 var menu = new gui.Menu();
 menu.append(new gui.MenuItem({ type: 'normal', label: '打开开发者模式', click: function(){
