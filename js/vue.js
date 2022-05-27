@@ -326,6 +326,7 @@ new Vue({
         // 跳转文件
         onHref(type,suffix,path) {
             console.log(type,path);
+            suffix = suffix.toLowerCase();
             if(suffix === 'exe'){
                 this._OpenEXE(path);
             }else {
