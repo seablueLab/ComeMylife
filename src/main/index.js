@@ -148,7 +148,7 @@ function createWindow () {
   //图标的上下文菜单
   const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
   //设置此托盘图标的悬停提示内容
-  appTray.setToolTip("日历 - Seablue\n点击显示/隐藏?");
+  appTray.setToolTip("快捷启动应用 - Seablue\n点击显示/隐藏?");
   //设置此图标的上下文菜单
   appTray.setContextMenu(contextMenu);
 /*   // 获取托盘所在位置信息
