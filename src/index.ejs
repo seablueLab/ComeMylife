@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html style='display:none'>
+	<head>
+		<meta charset="utf-8" />
+		<title>走向你 - ComeMylife</title>
+		<% if (htmlWebpackPlugin.options.nodeModules) { %>
+		<!-- Add `node_modules/` to global paths so `require` works properly in development -->
+		<script>
+			require('module').globalPaths.push('<%= htmlWebpackPlugin.options.nodeModules.replace(/\\/g, '\\\\') %>')
+		</script>
+		<% } %>
+		<!-- 引入配置css文件 -->
+		<link rel="stylesheet" href="static/css/base.css">
+		<link rel="stylesheet" href="static/css/seablueUI.min.css">
+		<link rel="stylesheet" href="static/css/element-ui@2.15.6.css">
+	</head>
+	<body class="Seablue" style="background-color: transparent;">
+    
+
+        <div class="ComeMylife">
+            <div  class="ComeMylife-title">
+                <h2 v-text="ComeMylifeTitle"></h2>
+                <div class="seaSystem">
+                    <ul>
+                        <li @click="outline"><i class="el-icon-remove-outline"></i></li>
+                        <li @click="circle"><i class="el-icon-circle-close"></i></li>
+                    </ul>
+                </div>
+            </div> 
+            <div  class="ComeMylife-content">
+                <el-menu default-active='1' style="user-select: none;" mode="horizontal">
+                    <el-menu-item index="1" @click="onNavHome">首页</el-menu-item>
+                    <el-menu-item index="2" @click="onNavIsFolder">文件管理</el-menu-item>
+                    <el-submenu index="3">
+                        <template slot="title">文件选项</template>
+                        <el-menu-item index="3-1" @click="onNavArchive">创建归档</el-menu-item>
+                        <el-menu-item index="3-2" @click="onNavFolder">创建文件夹</el-menu-item>
+                    </el-submenu>
+                </el-menu>
+                <el-dialog style="user-select: none;" title="创建归档"
+                top='12vh' :visible.sync="isNavArchive" width="90%"> 
+                    <div style="text-align: right;">
+                        <el-form ref="form" :model="comeMylifeForm">
+                            <el-form-item label="">
+                            <el-input
+                            placeholder="请输入添加的归档"
+                            suffix-icon="el-icon-folder-opened"
+                            v-model="comeMylifeForm.archive"></el-input>
+                            </el-form-item>
+                        </el-form>
+                        <el-button style="font-size: 80%;padding: 10px 15px;"
+                        class="sea-btn btn-1 btn-active-1" 
+                        type="success" @click="onCreateArchive">创建</el-button>
+                    </div>
+                </el-dialog>
+                <el-dialog style="user-select: none;" title="保存地址" :before-close="handleClose"
+                top='12vh' :visible.sync="isNavData" width="90%"> 
+                    <el-upload
+                        action="#"
+                        ref="upload"
+                        drag
+                        :on-preview="handlePreview"
+                        :on-remove="handleRemove"
+                        :before-remove="beforeRemove"
+                        :before-upload="beforeUpload"
+                        multiple
+                        :limit="10"
+                        :on-exceed="handleExceed"
+                        :on-success="handleSuccess"
+                        :file-list="fileList" >
+                        <i class="el-icon-upload"></i>
+                        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                        <div slot="tip" class="el-upload__tip" style="text-align: center;">保存程序快捷方式</div>
+                    </el-upload>
+                </el-dialog>
+                <el-dialog style="user-select: none;" title="保存目录" :before-close="handleFolderClose" 
+                top='12vh' :visible.sync="isNavFolder" width="90%"> 
+                    <el-upload id="Folder"
+                        action="#"
+                        ref="uploadFolder"
+                        drag
+                        formData
+                        :on-success="handSuccessFolder"
+                        >
+                    <!-- webkitdirectory directory multiple formData -->
+                        <i class="el-icon-upload"></i>
+                        <div class="el-upload__text">将文件拖到此处获取目录，或<em>点击上传</em></div>
+                        <div slot="tip" class="el-upload__tip" style="text-align: center;">打开文件获取目录</div>
+                    </el-upload>
+                    <!-- 最好再添加一个标准属性 directory ，防止某一天该属性被纳入w3c标准 -->
+                </el-dialog>
+                <div v-if="!isFolder" class="ComeMylife-dropdown dropdown-archive">
+                    <ol class="years">
+                        <li class="year" v-for="(item,i) in ComeMylifefile" :key="item.id">
+                            <a class="expander" :ref="item.id" @click='onExpander(item.id)' href="javascript:void(0);">
+                                <span v-text='item.name'>归档</span>
+                                <div style="display: inline-block;">
+                                    <i class="el-icon-edit" style="margin-left: 5px;" @click.stop='onCreateClassify(item,i)'></i>
+                                    <i class="el-icon-news" style="margin-left: 5px;" @click.stop='onUpdateArchive(item,i)'></i>
+                                    <i class="el-icon-delete" style="margin-left: 5px;" @click.stop='onDeleteArchive(item,i)'></i>
+                                </div>
+                            </a>
+                            <ol v-if="item.parent">
+                                <li class="month" v-for="(items, j) in item.parent" :key="items.id">
+                                    <a style="user-select: none;" class="expander" :ref="items.id" @click='onExpander(items.id)' href="javascript:void(0);" v-text="items.name">
+                                        <span v-text="items.name">分类</span>
+                                    </a><div style="display: inline-block;user-select: none;">
+                                        <i class="el-icon-edit" style="margin-left: 5px;" @click.stop='onCreateData(items,i,j)'></i>
+                                        <i class="el-icon-news" style="margin-left: 5px;" @click.stop='onUpdateClassify(items,i,j)'></i>
+                                        <i class="el-icon-delete" style="margin-left: 5px;" @click.stop='onDeleteClassify(items,i,j)'></i>
+                                    </div>
+                                    <ol v-if="items.child">
+                                        <li v-for="(itmes,k) in items.child" :key="itmes.id">
+                                            <a target="_blank" @click='onHref(itmes.type,itmes.suffix,itmes.path)' href="javascript:void(0);" v-text="itmes.name">内容</a>
+                                            <div style="display: inline-block;user-select: none; font-size: 80%;">
+                                                <i class="el-icon-news" style="margin-left: 5px;" @click.stop='onUpdateData(itmes,i,j,k)'></i>
+                                                <i class="el-icon-delete" style="margin-left: 5px;" @click.stop='onDeleteData(itmes,i,j,k)'></i>
+                                            </div>
+                                        </li>
+                                    </ol>
+                                </li>
+                            </ol>
+                        </li>
+                    </ol>
+                </div>
+                <div v-if="isFolder" class="ComeMylife-folder">
+                    <ol>
+                        <li v-for="(item,i) in ComeMylifefolder" :key="item.id">
+                            <a href="javascript:void(0);" @click="onFolderHref(item.name,item.path)" target="_blank" v-text="item.name"></a>
+                            <div style="display: inline-block;user-select: none;">
+                                <i class="el-icon-news" style="margin-left: 5px;" @click.stop='onUpdateFolder(item,i)'></i>
+                                <i class="el-icon-delete" style="margin-left: 5px;" @click.stop='onDeleteFolder(item,i)'></i>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+            </div>  <!-- ComeMylife-content -->
+            <div class='ComeMylife-footer'> </div>
+        </div> <!-- END-ComeMylife -->
+	</body>
+</html>
+<!-- Include the models library -->
+<script src='static/js/SeablueUI.js'></script>
+<!-- Include the models library -->
+<script>
+    const $ = Seablue.$;
+    //Seablue.menu.archive();   
+</script>
+<script src='static/js/vue@2.6.14.min.js'></script>
+<script src='static/js/element-ui@2.15.6.js'></script>
+<script src='static/js/moment@2.29.1.min.js'></script>
+<script src='static/js/init.js'></script>
+<% if (process.env.NODE_ENV !== 'development') { %>
+<script src="static/js/eruda.min.js"></script>
+<script>
+    eruda.init();
+    eruda.position({ y: 600});
+</script>
+<% } %>
+
+<style>
+    /* 去掉electron滚动条 */
+    ::-webkit-scrollbar { display: none; } 
+    @keyframes show {
+        0% {
+            opacity: 0;
+            transform: translateY(300px) scale(0);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    @keyframes hide {
+        0% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(300px) scale(0);
+        }
+    }
+    .Seablue {
+        outline: 0;
+        overflow: hidden;
+        font-family: Avenir,-apple-system,BlinkMacSystemFont,'Microsoft YaHei','Helvetica Neue',Helvetica,Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol',sans-serif;
+    }
+    .Seablue h1, .Seablue h2, .Seablue h3 {
+        padding-bottom: 15px;
+        color:#fff;
+    }
+    .ComeMylife {
+        background-color: #d2eeff;
+        height:100%;
+    }
+    .ComeMylife-content {    
+        height: 480px;
+        overflow-x: scroll;
+        position: relative;
+        top: 85px;
+    }
+    .ComeMylife-footer {
+        position: relative;
+        top: 480px;
+        height: 20px;
+    }
+    .ComeMylife-title {
+        position: fixed;
+        width: 100%;
+        margin: 0;
+        color: #fff;
+        text-align: center;
+        text-shadow: 1px 1px 1px #a0d6f5;
+        user-select: none;
+        margin: 0px;
+        padding: 10px 0px 0px 0px;
+        background-color: rgb(53, 133, 202);
+        -webkit-app-region: drag;
+        border-radius: 5px 5px 0px 0px;
+        z-index: 6
+    }
+    .seaSystem {
+        user-select: none;
+        -webkit-app-region: no-drag !important;
+        margin: 5px;
+        padding: 0;
+        position: absolute;
+        top: 0;
+        right: 10px;
+    }
+    .seaSystem ul,
+    .seaSystem li {
+        color: white;
+        list-style: none;
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        padding-left: 5px;
+        font-size: 25px;
+    }
+    .seaSystem li {
+        display: inline-block;
+    }
+    .el-menu.el-menu--horizontal {
+        background-color: rgba(212, 236, 255, 0.32);
+        border-bottom: solid 1px #03ffa2;
+        z-index: 7;
+        width: 100%;
+        height: 60px;
+    }
+    .Seablue .dropdown-archive .years .year {
+        border-bottom: solid 1px #d1d40d;
+    }
+    .Seablue .ComeMylife-folder ul li, .Seablue .ComeMylife-folder ol li {
+        margin-bottom: 30px;
+        margin-left: 15%;
+        padding-left: 2%;
+        padding-right: 15%;
+    }
+    .ComeMylife-folder{
+        padding: .5em;
+        padding-top: 30px;
+        margin: 20px 20px 0px 20px;
+        background-color: rgba(255, 255, 255, 0.61);
+        box-shadow: rgb(193, 193, 193) 1px 20px 20px 0px;
+    }
+    .ComeMylife{
+        /* background-image: url('static/img.jpg'); */
+        background-color: rgba(212, 236, 255, 0.32);
+    }
+    .ComeMylife::before{
+        position: absolute;
+        content: " ";
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        opacity: 1;
+        z-index: -1;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-image: url('static/img.jpg');
+        border-radius: 5px 5px 0px 0px;
+        width: 100%;
+        height: 100%;
+        filter: blur(4px);
+        /* filter: brightness(35%); */
+    }
+    .el-menu.el-menu--horizontal::before{
+        position: absolute;
+        content: " ";
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        opacity: 0.3;
+        z-index: -1;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background: url('static/img.jpg') no-repeat 20% 37% scroll;
+        border-radius: 5px 5px 0px 0px;
+        width: 100%;
+        height: 100%;
+        filter: blur(0px);
+        /* filter: brightness(35%); */
+    }
+    .ComeMylife-title::before{
+        position: absolute;
+        content: " ";
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        opacity: 0.3;
+        z-index: -1;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background: url('static/img.jpg') no-repeat 20% 30% scroll;
+        border-radius: 5px 5px 0px 0px;
+        width: 100%;
+        height: 100%;
+        filter: blur(0px);
+        /* filter: brightness(35%); */
+    }
+
+
+    @keyframes show1 {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+    @keyframes hide1 {
+        0% {
+            opacity: 1;
+        }
+        100% {
+            opacity: 0;
+        }
+    }
+</style>

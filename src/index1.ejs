@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>日历 - Seablue</title>
+    <% if (htmlWebpackPlugin.options.nodeModules) { %>
+      <!-- Add `node_modules/` to global paths so `require` works properly in development -->
+      <script>
+        require('module').globalPaths.push('<%= htmlWebpackPlugin.options.nodeModules.replace(/\\/g, '\\\\') %>')
+      </script>
+    <% } %>
+  </head>11
+  <body >/* style="background-color: transparent;" */
+    <!-- Set `__static` path to static files in production -->
+    <% if (!process.browser) { %>
+      <script>
+        // if (process.env.NODE_ENV !== 'development')
+        if (process.env.NODE_ENV !== 'development'){
+          function loadStyleString(css) {
+              var style = document.createElement("style");
+              style.type = "text/css";
+              try {
+                  style.appendChild(document.createTextNode(css));
+              } catch(ex) {
+                  style.styleSheet.cssText = css;
+              }
+              var head = document.getElementsByTagName('head')[0];
+              head.appendChild(style);
+          }
+          window.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\');
+          loadStyleString(`
+          .calendar-title::before{
+              background-image: url('static/img.jpg') !important
+          }
+          .schedule-calendar-hd::before{
+              background-image: url('static/img.jpg') !important
+          }
+          .schedule-calendar-week::before{
+              background-image: url('static/img.jpg') !important
+          }
+          `);
+      }
+
+      </script>
+    <% } %>
+  <% if (process.env.NODE_ENV !== 'development') { %>
+    <script src="static/js/eruda.min.js"></script>
+    <script>
+      eruda.init();
+      eruda.position({ y: 600});
+    </script>
+  <% } %>
+
+    <!-- webpack builds are automatically injected -->
+  </body>1
+</html>
