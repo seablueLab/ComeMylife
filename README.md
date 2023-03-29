@@ -1,7 +1,22 @@
-nwjs-sdk-v0.34.5-win-x64
-打包开发
-1. 压缩当前目录全部文件
-2. 改名为 nwapp.nw
-3. 压缩包放到nwjs-sdk目录下
-4. copy /b nw.exe+nwapp.nw ComeMylife.exe
-5. sdk为软件目录
+# my
+
+> An electron-vue project
+
+#### Build Setup
+
+``` bash
+# install dependencies
+npm install
+
+# serve with hot reload at localhost:9080
+npm run dev
+
+# build electron application for production
+npm run build
+
+
+```
+
+---
+
+This project was generated with [electron-vue](https://github.com/SimulatedGREG/electron-vue)@[8d4ed60](https://github.com/SimulatedGREG/electron-vue/tree/8d4ed607d65300381a8f47d97923eb07832b1a9a) using [vue-cli](https://github.com/vuejs/vue-cli). Documentation about the original structure can be found [here](https://simulatedgreg.gitbooks.io/electron-vue/content/index.html).
